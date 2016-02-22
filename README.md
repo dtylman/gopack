@@ -4,6 +4,10 @@ Native implementation of deb in go
 ## Creating deb package
 
 Usage:
+```sh
+go get github.com/dtylman/gopack/deb
+```
+And then: 
 ```go
 import	"github.com/dtylman/gopack/deb"
 ```
