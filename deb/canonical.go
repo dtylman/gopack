@@ -37,9 +37,10 @@ func newCanonical() (*canonical, error) {
 func (c *canonical) AddBytes(data []byte, tarName string) error {
 	header := new(tar.Header)
 	header.Name = tarName
-	header.Mode = 0755
+	header.Mode = 0664
 	header.Size = int64(len(data))
 	header.ModTime = time.Now()
+	header.Typeflag = tar.TypeReg
 	err := c.tarWriter.WriteHeader(header)
 	if err != nil {
 		return err
@@ -58,6 +59,25 @@ func (c *canonical) AddBytes(data []byte, tarName string) error {
 		return err
 	}
 	return nil
+}
+
+func (c *canonical) AddLink(name string, linkName string) error {
+	header := new(tar.Header)
+	header.Name = name
+	header.Linkname = linkName
+	header.Mode = 0664
+	header.ModTime = time.Now()
+	header.Typeflag = tar.TypeSymlink
+	return c.tarWriter.WriteHeader(header)
+}
+
+func (c *canonical) AddFolder(name string) error {
+	header := new(tar.Header)
+	header.Name = name
+	header.Mode = 0775
+	header.ModTime = time.Now()
+	header.Typeflag = tar.TypeDir
+	return c.tarWriter.WriteHeader(header)
 }
 
 func (c *canonical) AddFile(name string, tarName string) error {
@@ -168,7 +188,7 @@ func (c *canonical) write(writer *ar.Writer, name string) error {
 	header := new(ar.Header)
 	header.Name = name
 	header.Size = fileInfo.Size()
-	header.Mode = 0755
+	header.Mode = 0664
 	header.ModTime = time.Now()
 	err = writer.WriteHeader(header)
 	if err != nil {
