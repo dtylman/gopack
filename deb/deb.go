@@ -10,14 +10,13 @@ import (
 const (
 	DebControl = "control.tar.gz"
 	DebData    = "data.tar.gz"
-	DebBinary = "debian-binary"
+	DebBinary  = "debian-binary"
 )
 
 type Deb struct {
 	output  io.Writer
 	Data    *canonical
 	Control *canonical
-	
 }
 
 //New creates new deb writer
@@ -47,7 +46,7 @@ func (d *Deb) Create() error {
 	if err != nil {
 		return err
 	}
-	err = d.Control.write(ar,DebControl)
+	err = d.Control.write(ar, DebControl)
 	if err != nil {
 		return err
 	}
@@ -58,17 +57,17 @@ func (d *Deb) Create() error {
 	return nil
 }
 
-func (d* Deb) addBinary(writer *ar.Writer) error{
-	body:=[]byte("2.0\n")
-	header:=new(ar.Header)
-	header.Name=DebBinary
-	header.Mode=0644
-	header.Size=int64(len(body))
-	header.ModTime=time.Now()
-	err:=writer.WriteHeader(header)
+func (d *Deb) addBinary(writer *ar.Writer) error {
+	body := []byte("2.0\n")
+	header := new(ar.Header)
+	header.Name = DebBinary
+	header.Mode = 0644
+	header.Size = int64(len(body))
+	header.ModTime = time.Now()
+	err := writer.WriteHeader(header)
 	if err != nil {
 		return err
 	}
-	_,err=writer.Write(body)
+	_, err = writer.Write(body)
 	return err
 }

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/dtylman/gopackers/deb"
+	"github.com/dtylman/gopack/deb"
 )
 
 func check(err error) {
@@ -19,7 +19,7 @@ func main() {
 	defer output.Close()
 	d, err := deb.New(output)
 	check(err)
-	err = d.AddFile("main.go", "usr/local/dtylman/gopackers")
+	err = d.Data.AddFile("main.go", "usr/local/dtylman/gopackers")
 	check(err)
 	err = d.Create()
 	check(err)

@@ -34,7 +34,7 @@ func newCanonical() (*canonical, error) {
 	return c, nil
 }
 
-func (c *canonical) addFile(name string, tarName string) error {
+func (c *canonical) AddFile(name string, tarName string) error {
 	fileInfo, err := os.Stat(name)
 	if err != nil {
 		return err
