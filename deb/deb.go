@@ -4,6 +4,8 @@ import (
 	"io"
 	"time"
 
+	"fmt"
+
 	"github.com/blakesmith/ar"
 )
 
@@ -17,6 +19,7 @@ type Deb struct {
 	output  io.Writer
 	Data    *canonical
 	Control *canonical
+	Info    Control
 }
 
 //New creates new deb writer
@@ -37,8 +40,13 @@ func New(writer io.Writer) (*Deb, error) {
 
 //Create creates the deb file
 func (d *Deb) Create() error {
+	fmt.Println(d.Data.md5s.String())
+	err := d.Control.AddBytes(d.Data.md5s.Bytes(), "md5sums")
+	if err != nil {
+		return err
+	}
 	ar := ar.NewWriter(d.output)
-	err := ar.WriteGlobalHeader()
+	err = ar.WriteGlobalHeader()
 	if err != nil {
 		return err
 	}

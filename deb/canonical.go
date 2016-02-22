@@ -5,11 +5,12 @@ import (
 	"compress/gzip"
 	"crypto/md5"
 	"fmt"
-	"hash"
 	"io"
 	"io/ioutil"
 	"os"
 	"time"
+
+	"bytes"
 
 	"github.com/blakesmith/ar"
 )
@@ -17,8 +18,8 @@ import (
 type canonical struct {
 	file      *os.File
 	zip       *gzip.Writer
-	md5       hash.Hash
 	tarWriter *tar.Writer
+	md5s      bytes.Buffer
 }
 
 func newCanonical() (*canonical, error) {
@@ -30,8 +31,33 @@ func newCanonical() (*canonical, error) {
 	}
 	c.zip = gzip.NewWriter(c.file)
 	c.tarWriter = tar.NewWriter(c.zip)
-	c.md5 = md5.New()
 	return c, nil
+}
+
+func (c *canonical) AddBytes(data []byte, tarName string) error {
+	header := new(tar.Header)
+	header.Name = tarName
+	header.Mode = 0755
+	header.Size = int64(len(data))
+	header.ModTime = time.Now()
+	err := c.tarWriter.WriteHeader(header)
+	if err != nil {
+		return err
+	}
+	md5 := md5.New()
+	_, err = c.tarWriter.Write(data)
+	if err != nil {
+		return err
+	}
+	err = c.tarWriter.Flush()
+	if err != nil {
+		return err
+	}
+	_, err = c.md5s.WriteString(fmt.Sprintf("%x  %s\n", md5.Sum(data), header.Name))
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (c *canonical) AddFile(name string, tarName string) error {
@@ -58,7 +84,8 @@ func (c *canonical) AddFile(name string, tarName string) error {
 		return err
 	}
 	defer file.Close()
-	reader := io.TeeReader(file, c.md5)
+	md5 := md5.New()
+	reader := io.TeeReader(file, md5)
 	_, err = io.Copy(c.tarWriter, reader)
 	if err != nil {
 		return err
@@ -68,6 +95,10 @@ func (c *canonical) AddFile(name string, tarName string) error {
 		return err
 	}
 	err = c.zip.Flush()
+	if err != nil {
+		return err
+	}
+	_, err = c.md5s.WriteString(fmt.Sprintf("%x  %s\n", md5.Sum(nil), header.Name))
 	if err != nil {
 		return err
 	}
