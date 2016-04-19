@@ -2,10 +2,12 @@ package deb
 
 import (
 	"errors"
-	"io"
 	"time"
 
 	"github.com/blakesmith/ar"
+	"os"
+	"path/filepath"
+	"fmt"
 )
 
 const (
@@ -16,16 +18,20 @@ const (
 
 //Deb represents a deb package
 type Deb struct {
-	output  io.Writer
 	Data    *canonical
 	Control *canonical
 	Info    Control
 }
 
 //New creates new deb writer
-func New(writer io.Writer) (*Deb, error) {
+func New(name, version, revision, arch string) (*Deb, error) {
 	deb := new(Deb)
-	deb.output = writer
+	deb.Info.Package = name
+	deb.Info.Version = version
+	if revision!=""{
+		deb.Info.Version+="-" + revision
+	}
+	deb.Info.Architecture =arch
 	var err error
 	deb.Data, err = newCanonical()
 	if err != nil {
@@ -39,11 +45,11 @@ func New(writer io.Writer) (*Deb, error) {
 }
 
 //Create creates the deb file
-func (d *Deb) Create() error {
+func (d *Deb) Create(folder string) error {
 	if d.Info.Package == "" {
 		return errors.New("Package name cannot be empty")
 	}
-	err := d.Control.AddFolder("./")
+	err := d.Control.AddEmptyFolder("./")
 	if err != nil {
 		return err
 	}
@@ -55,8 +61,13 @@ func (d *Deb) Create() error {
 	if err != nil {
 		return err
 	}
-
-	ar := ar.NewWriter(d.output)
+	fileName:=filepath.Join(folder, fmt.Sprintf("%s_%s_%s.deb",d.Info.Package,d.Info.Version,d.Info.Architecture))
+	debFile,err:=os.Create(fileName)
+	if err != nil {
+		return err
+	}
+	defer debFile.Close()
+	ar := ar.NewWriter(debFile)
 	err = ar.WriteGlobalHeader()
 	if err != nil {
 		return err

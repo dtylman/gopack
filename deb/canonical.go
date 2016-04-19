@@ -71,7 +71,7 @@ func (c *canonical) AddLink(name string, linkName string) error {
 	return c.tarWriter.WriteHeader(header)
 }
 
-func (c *canonical) AddFolder(name string) error {
+func (c *canonical) AddEmptyFolder(name string) error {
 	header := new(tar.Header)
 	header.Name = name
 	header.Mode = 0775
