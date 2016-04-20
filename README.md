@@ -1,7 +1,8 @@
 # gopack
-Native implementation of deb in go
 
-## Creating deb package
+Easy create deb & rpm pacakges from `go`
+
+## Creating packages
 
 Usage:
 ```sh
@@ -12,26 +13,20 @@ And then:
 import	"github.com/dtylman/gopack/deb"
 ```
 
-Creating a deb:
+### Creating deb:
 
 ```go
+
 func sampleDeb() error {
-	output, err := os.Create("helloworld_1.0-1.deb")
+	d, err := deb.New(pkgName, pkgVersion, pkgRevision, deb.AMD64)
 	if err != nil {
 		return err
 	}
-	defer output.Close()
-	d, err := deb.New(output)
+	err = d.Data.AddFile("/bin/ls", "/opt/danny/bin/ls")
 	if err != nil {
 		return err
 	}
-	err = d.Data.AddFile("/bin/ls", "./usr/local/bin/helloworld")
-	if err != nil {
-		return err
-	}
-	d.Info.Package = "helloworld"
-	d.Info.Version = "1.0-1"
-	d.Info.Architecture = "amd64"
+	d.PreInst = `echo hello world!`
 	d.Info.Maintainer = "Mickey Mouse <mickey@disney.com>"
 	d.Info.Section = "base"
 	d.Info.Homepage = "http://disney.org/"
@@ -39,7 +34,39 @@ func sampleDeb() error {
 	d.Info.Description = `Hello world
   Lorum ipsum
   Yada yada`
-	return d.Create()
+	debFileName, err := d.Create("")
+	fmt.Println("Created " + debFileName)
+	return err
 }
 ```
+
+### Creating rpm:
+ *Note:* must have rpmbuild installed
+ func sampleRpm() error {
+ 	r, err := rpm.New(pkgName, pkgVersion, pkgRevision, rpm.AMD64)
+ 	if err != nil {
+ 		return err
+ 	}
+ 	r.Spec.Pre = `echo hello world!`
+ 	r.Spec.Header[rpm.Summary] = "Hello world app"
+ 	r.Spec.Header[rpm.Packager] = "Mickey Mouse <mickey@disney.com>"
+ 	r.Spec.Header[rpm.URL] = "http://disney.org/"
+
+ 	r.Spec.Depends("yum", "rpm", "mc")
+ 	r.Spec.Description = `Hello world
+   Lorum ipsum
+   Yada yada`
+ 	err = r.AddFile("/bin/ls", "/opt/danny/bin/ls")
+ 	if err != nil {
+ 		return err
+ 	}
+ 	defer r.Close()
+ 	rpmFileName, err := r.Create("")
+ 	fmt.Println("Created " + rpmFileName)
+ 	return err
+ }
+```go
+
+```
+
 
