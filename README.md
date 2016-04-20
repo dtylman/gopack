@@ -49,6 +49,7 @@ func sampleDeb() error {
  	if err != nil {
  		return err
  	}
+ 	defer r.Close()
  	r.Spec.Pre = `echo hello world!`
  	r.Spec.Header[rpm.Summary] = "Hello world app"
  	r.Spec.Header[rpm.Packager] = "Mickey Mouse <mickey@disney.com>"
@@ -62,7 +63,6 @@ func sampleDeb() error {
  	if err != nil {
  		return err
  	}
- 	defer r.Close()
  	rpmFileName, err := r.Create("")
  	fmt.Println("Created " + rpmFileName)
  	return err
