@@ -13,7 +13,7 @@ And then:
 import	"github.com/dtylman/gopack/deb"
 ```
 
-### Creating deb:
+### Creating DEB:
 
 ```go
 
@@ -40,8 +40,10 @@ func sampleDeb() error {
 }
 ```
 
-### Creating rpm:
- *Note:* must have rpmbuild installed
+### Creating RPM:
+ *Note:* must have `rpmbuild` installed
+
+```go
  func sampleRpm() error {
  	r, err := rpm.New(pkgName, pkgVersion, pkgRevision, rpm.AMD64)
  	if err != nil {
@@ -65,8 +67,6 @@ func sampleDeb() error {
  	fmt.Println("Created " + rpmFileName)
  	return err
  }
-```go
-
 ```
 
 
