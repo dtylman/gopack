@@ -22,14 +22,15 @@ const (
 )
 
 func sampleDeb() error {
-	d, err := deb.New(pkgName, pkgVersion, pkgRevision, "amd64")
+	d, err := deb.New(pkgName, pkgVersion, pkgRevision, deb.AMD64)
 	if err != nil {
 		return err
 	}
-	err = d.Data.AddFile("/bin/ls", "./usr/local/bin/helloworld")
+	err = d.Data.AddFile("/bin/ls", "/opt/danny/bin/ls")
 	if err != nil {
 		return err
 	}
+	d.PreInst = `echo hello world!`
 	d.Info.Maintainer = "Mickey Mouse <mickey@disney.com>"
 	d.Info.Section = "base"
 	d.Info.Homepage = "http://disney.org/"
@@ -37,14 +38,17 @@ func sampleDeb() error {
 	d.Info.Description = `Hello world
   Lorum ipsum
   Yada yada`
-	return d.Create("")
+	debFileName, err := d.Create("")
+	fmt.Println("Created " + debFileName)
+	return err
 }
 
 func sampleRpm() error {
-	r, err := rpm.New(pkgName, pkgVersion, pkgRevision, "x86_64")
+	r, err := rpm.New(pkgName, pkgVersion, pkgRevision, rpm.AMD64)
 	if err != nil {
 		return err
 	}
+	r.Spec.Pre = `echo hello world!`
 	r.Spec.Header[rpm.Summary] = "Hello world app"
 	r.Spec.Header[rpm.Packager] = "Mickey Mouse <mickey@disney.com>"
 	r.Spec.Header[rpm.URL] = "http://disney.org/"
@@ -53,12 +57,14 @@ func sampleRpm() error {
 	r.Spec.Description = `Hello world
   Lorum ipsum
   Yada yada`
-	err = r.AddFile("/bin/ls", "/opt/danny")
+	err = r.AddFile("/bin/ls", "/opt/danny/bin/ls")
 	if err != nil {
 		return err
 	}
 	defer r.Close()
-	return r.Create()
+	rpmFileName, err := r.Create("")
+	fmt.Println("Created " + rpmFileName)
+	return err
 }
 
 func main() {

@@ -12,6 +12,7 @@ import (
 )
 
 const (
+	AMD64      = "amd64"
 	debControl = "control.tar.gz"
 	debData    = "data.tar.gz"
 	debBinary  = "debian-binary"
@@ -19,9 +20,13 @@ const (
 
 //Deb represents a deb package
 type Deb struct {
-	Data    *canonical
-	Control *canonical
-	Info    Control
+	Data     *canonical
+	Control  *canonical
+	Info     Control
+	PreInst  string
+	PostInst string
+	PreRm    string
+	PostRm   string
 }
 
 //New creates new deb writer
@@ -46,47 +51,61 @@ func New(name, version, revision, arch string) (*Deb, error) {
 }
 
 //Create creates the deb file
-func (d *Deb) Create(folder string) error {
+func (d *Deb) Create(folder string) (string, error) {
 	if d.Info.Package == "" {
-		return errors.New("Package name cannot be empty")
+		return "", errors.New("Package name cannot be empty")
 	}
 	err := d.Control.AddEmptyFolder("./")
 	if err != nil {
-		return err
+		return "", err
 	}
 	err = d.Control.AddBytes(d.Info.bytes(), "./control")
 	if err != nil {
-		return err
+		return "", err
 	}
 	err = d.Control.AddBytes(d.Data.md5s.Bytes(), "./md5sums")
 	if err != nil {
-		return err
+		return "", err
+	}
+	if d.PostInst != "" {
+		d.Control.AddBytes([]byte(d.PostInst), "postinst")
+	}
+	if d.PreInst != "" {
+		d.Control.AddBytes([]byte(d.PreInst), "preinst")
+
+	}
+	if d.PostRm != "" {
+		d.Control.AddBytes([]byte(d.PostRm), "postrm")
+
+	}
+	if d.PreRm != "" {
+		d.Control.AddBytes([]byte(d.PreRm), "prerm")
 	}
 	fileName := filepath.Join(folder, fmt.Sprintf("%s_%s_%s.deb", d.Info.Package, d.Info.Version, d.Info.Architecture))
 	debFile, err := os.Create(fileName)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer debFile.Close()
 	ar := ar.NewWriter(debFile)
 	err = ar.WriteGlobalHeader()
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	err = d.addBinary(ar)
 	if err != nil {
-		return err
+		return "", err
 	}
 	err = d.Control.write(ar, debControl)
 	if err != nil {
-		return err
+		return "", err
 	}
 	err = d.Data.write(ar, debData)
 	if err != nil {
-		return err
+		return "", err
 	}
-	return nil
+	return fileName, nil
 }
 
 func (d *Deb) addBinary(writer *ar.Writer) error {
@@ -102,4 +121,8 @@ func (d *Deb) addBinary(writer *ar.Writer) error {
 	}
 	_, err = writer.Write(body)
 	return err
+}
+
+func (d *Deb) AddFile(sourcePath string, targetPath string) error {
+	return d.Data.AddFile(sourcePath, targetPath)
 }

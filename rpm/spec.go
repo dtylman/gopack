@@ -176,3 +176,7 @@ func (s *SpecFile) Write(writer io.Writer) error {
 	}
 	return nil
 }
+
+func (s *SpecFile) PackageName() string {
+	return fmt.Sprintf("%s-%s-%s.%s.rpm", s.Header[PkgName], s.Header[PkgVersion], s.Header[Release], s.Header[BuildArch])
+}

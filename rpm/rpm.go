@@ -9,26 +9,30 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/dtylman/gopack/files"
+)
+
+const (
+	AMD64 = "x86_64"
 )
 
 type Rpm struct {
 	Spec          *SpecFile
-	name          string
 	workingFolder string
 	buildRoot     string
-	arch          string
 }
 
 func New(name, version, revision, arch string) (*Rpm, error) {
 	r := new(Rpm)
 	r.Spec = newSpec()
-	r.name = name
+
 	var err error
 	r.workingFolder, err = ioutil.TempDir("", name)
 	if err != nil {
 		return nil, err
 	}
-	r.Spec.SetName(r.name)
+	r.Spec.SetName(name)
 	r.Spec.SetVersion(version, revision)
 	r.buildRoot = filepath.Join(r.workingFolder, "BUILD")
 	err = os.MkdirAll(r.buildRoot, 0755)
@@ -68,25 +72,27 @@ func (r *Rpm) Close() error {
 	// "/tmp/package-rpm-build20160419-10869-1byo5sr/SPECS/demistoserver.spec"], :level=>:info}
 
 */
-func (r *Rpm) Create() error {
-	rpms := filepath.Join(r.workingFolder, "RPMS")
-	err := os.MkdirAll(rpms, 0755)
+func (r *Rpm) Create(folder string) (string, error) {
+	rpmdir, err := filepath.Abs(folder)
 	if err != nil {
-		return err
+		return "", err
 	}
+	r.Spec.AddDefine("_rpmdir " + rpmdir)
 	specFolder := filepath.Join(r.workingFolder, "SPECS")
 	err = os.MkdirAll(specFolder, 0755)
 	if err != nil {
-		return err
+		return "", err
 	}
-	specFile, err := os.Create(filepath.Join(specFolder, r.name+".spec"))
+	pkgName := r.Spec.Header[PkgName]
+
+	specFile, err := os.Create(filepath.Join(specFolder, pkgName+".spec"))
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer specFile.Close()
 	err = r.Spec.Write(specFile)
 	if err != nil {
-		return err
+		return "", err
 	}
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
@@ -95,9 +101,14 @@ func (r *Rpm) Create() error {
 	cmd.Stderr = &stderr
 	err = cmd.Run()
 	if err != nil {
-		return fmt.Errorf("rpmbuild failed with: %v. Stdout: %v. Stderr: %v", err, stdout.String(), stderr.String())
+		return "", fmt.Errorf("rpmbuild failed with: %v. Stdout: %v. Stderr: %v", err, stdout.String(), stderr.String())
 	}
-	return filepath.Walk(rpms, r.movePackageFile)
+	rpmFile := filepath.Join(rpmdir, r.Spec.Header[BuildArch], r.Spec.PackageName())
+	_, err = os.Stat(rpmFile)
+	if err != nil {
+		return "", err
+	}
+	return rpmFile, nil
 }
 
 func (r *Rpm) movePackageFile(path string, info os.FileInfo, err error) error {
@@ -110,26 +121,42 @@ func (r *Rpm) movePackageFile(path string, info os.FileInfo, err error) error {
 }
 
 func (r *Rpm) AddEmptyFolder(name string) error {
+	destFolder := filepath.Join(r.buildRoot, name)
+	err := os.MkdirAll(destFolder, 0755)
+	if err != nil {
+		return err
+	}
+	r.Spec.AddFile(name)
 	return nil
 }
 
 func (r *Rpm) AddFolder(path string, prefix string) error {
+	fc, err := files.New(path)
+	if err != nil {
+		return err
+	}
+	for _, path := range fc.Files {
+		targetPath := strings.TrimPrefix(path, prefix)
+		err = r.AddFile(path, targetPath)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
-func (r *Rpm) AddFile(path string, prefix string) error {
-	srcFile, err := os.Open(path)
+func (r *Rpm) AddFile(sourcePath string, targetPath string) error {
+	srcFile, err := os.Open(sourcePath)
 	if err != nil {
 		return err
 	}
 	defer srcFile.Close()
-	fileName := filepath.Base(path)
-	destFolder := filepath.Join(r.buildRoot, prefix)
-	err = os.MkdirAll(destFolder, 0755)
+	destPath := filepath.Join(r.buildRoot, targetPath)
+	err = os.MkdirAll(filepath.Dir(destPath), 0755)
 	if err != nil {
 		return err
 	}
-	destFile, err := os.Create(filepath.Join(destFolder, fileName))
+	destFile, err := os.Create(destPath)
 	if err != nil {
 		return err
 	}
@@ -138,6 +165,6 @@ func (r *Rpm) AddFile(path string, prefix string) error {
 	if err != nil {
 		return err
 	}
-	r.Spec.AddFile(filepath.Join(prefix, fileName))
+	r.Spec.AddFile(targetPath)
 	return nil
 }
