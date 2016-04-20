@@ -6,29 +6,30 @@ import (
 )
 
 const (
-	PkgName = "Name"
-	PkgVersion = "Version"
-	Release = "Release"
-	Summary = "Summary"
-	Group = "Group"
-	License = "License"
-	Vendor = "Vendor"
-	URL = "URL"
-	Packager = "Packager"
-	Requires = "Requires"
-	Conflicts = "Conflicts"
-	Prefix = "Prefix"
+	PkgName     = "Name"
+	PkgVersion  = "Version"
+	Release     = "Release"
+	Summary     = "Summary"
+	Group       = "Group"
+	License     = "License"
+	Vendor      = "Vendor"
+	URL         = "URL"
+	Packager    = "Packager"
+	Requires    = "Requires"
+	Conflicts   = "Conflicts"
+	Prefix      = "Prefix"
+	AutoReqProv = "AutoReqProv"
+	BuildRoot   = "BuildRoot"
+	BuildArch   = "BuildArch"
 )
 
 type SpecFile struct {
 	Header      map[string]string
 	Defines     []string
-	Requires []string
+	Requires    []string
 	Description string
 	Prep        string
 	Build       string
-	Install     string
-	Clean       string
 	Pre         string
 	Post        string
 	PreUn       string
@@ -40,15 +41,16 @@ type SpecFile struct {
 func newSpec() *SpecFile {
 	s := new(SpecFile)
 	s.Header = make(map[string]string)
-	s.Header[Release]="1"
-	s.Header[Group]="default"
-	s.Header[License]="unknown"
-	s.Header[Prefix]="/"
+	s.Header[Release] = "1"
+	s.Header[Group] = "default"
+	s.Header[License] = "unknown"
+	s.Header[Prefix] = "/"
+	s.Header[AutoReqProv] = "no"
 	return s
 }
 
-func (s* SpecFile) Depends(requires...string) {
-	s.Requires=requires
+func (s *SpecFile) Depends(requires ...string) {
+	s.Requires = requires
 }
 func (s *SpecFile) AddDefine(value string) {
 	s.Defines = append(s.Defines, value)
@@ -59,15 +61,15 @@ func (s *SpecFile) SetName(name string) {
 }
 
 func (s *SpecFile) SetVersion(version string, revision string) {
-	if revision!=""{
+	if revision != "" {
 		s.Header[PkgVersion] = version + "_" + revision
 	} else {
 		s.Header[PkgVersion] = version
 	}
 }
 
-func (s* SpecFile) AddFile(name string) {
-	s.Files=append(s.Files,name)
+func (s *SpecFile) AddFile(name string) {
+	s.Files = append(s.Files, name)
 }
 
 func (s *SpecFile) Write(writer io.Writer) error {
@@ -84,9 +86,8 @@ func (s *SpecFile) Write(writer io.Writer) error {
 			return err
 		}
 	}
-
 	for _, requires := range s.Requires {
-		_, err = fmt.Fprintln(writer, Requires+": " +requires)
+		_, err = fmt.Fprintln(writer, Requires+": "+requires)
 		if err != nil {
 			return err
 		}
@@ -118,23 +119,6 @@ func (s *SpecFile) Write(writer io.Writer) error {
 		return err
 	}
 
-	_, err = fmt.Fprintln(writer, "%install")
-	if err != nil {
-		return err
-	}
-	_, err = fmt.Fprintln(writer, s.Install)
-	if err != nil {
-		return err
-	}
-
-	_, err = fmt.Fprintln(writer, "%clean")
-	if err != nil {
-		return err
-	}
-	_, err = fmt.Fprintln(writer, s.Clean)
-	if err != nil {
-		return err
-	}
 	_, err = fmt.Fprintln(writer, "%pre")
 	if err != nil {
 		return err
@@ -175,6 +159,7 @@ func (s *SpecFile) Write(writer io.Writer) error {
 	if err != nil {
 		return err
 	}
+
 	for _, fileName := range s.Files {
 		_, err = fmt.Fprintln(writer, fileName)
 		if err != nil {

@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/dtylman/gopack/deb"
-	"github.com/dtylman/gopack/rpm"
 	"fmt"
 	"os"
+
+	"github.com/dtylman/gopack/deb"
+	"github.com/dtylman/gopack/rpm"
 )
 
 func check(err error) {
@@ -15,13 +16,13 @@ func check(err error) {
 }
 
 const (
-	pkgName = "helloworld"
-	pkgVersion = "1.0"
+	pkgName     = "helloworld"
+	pkgVersion  = "1.0"
 	pkgRevision = "1"
-
 )
+
 func sampleDeb() error {
-	d, err := deb.New(pkgName,pkgVersion,pkgRevision,"amd64")
+	d, err := deb.New(pkgName, pkgVersion, pkgRevision, "amd64")
 	if err != nil {
 		return err
 	}
@@ -39,19 +40,20 @@ func sampleDeb() error {
 	return d.Create("")
 }
 
-func sampleRpm() error{
-	r ,err := rpm.New(pkgName,pkgVersion,pkgRevision,"")
+func sampleRpm() error {
+	r, err := rpm.New(pkgName, pkgVersion, pkgRevision, "x86_64")
 	if err != nil {
 		return err
 	}
-	r.Spec.Header[rpm.Summary]="Hello world app"
-	r.Spec.Header[rpm.Packager]="Mickey Mouse <mickey@disney.com>"
-	r.Spec.Header[rpm.URL]="http://disney.org/"
-	r.Spec.Depends("libc6","libcrypt11","zlib1g")
-	r.Spec.Description=`Hello world
+	r.Spec.Header[rpm.Summary] = "Hello world app"
+	r.Spec.Header[rpm.Packager] = "Mickey Mouse <mickey@disney.com>"
+	r.Spec.Header[rpm.URL] = "http://disney.org/"
+
+	r.Spec.Depends("yum", "rpm", "mc")
+	r.Spec.Description = `Hello world
   Lorum ipsum
   Yada yada`
-	err=r.AddFile("/bin/ls","/usr/bin")
+	err = r.AddFile("/bin/ls", "/opt/danny")
 	if err != nil {
 		return err
 	}
