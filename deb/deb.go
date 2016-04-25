@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/blakesmith/ar"
+	"github.com/dtylman/gopack/files"
 )
 
 const (
@@ -125,4 +126,23 @@ func (d *Deb) addBinary(writer *ar.Writer) error {
 
 func (d *Deb) AddFile(sourcePath string, targetPath string) error {
 	return d.Data.AddFile(sourcePath, targetPath)
+}
+
+func (d *Deb) AddEmptyFolder(name string) error {
+	return d.Data.AddEmptyFolder(name)
+}
+
+func (d *Deb) AddFolder(path string, prefix string) error {
+	fc, err := files.New(path)
+	if err != nil {
+		return err
+	}
+	for _, path := range fc.Files {
+		targetPath := filepath.Join(prefix, filepath.Base(path))
+		err = d.AddFile(path, targetPath)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

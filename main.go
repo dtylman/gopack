@@ -26,15 +26,6 @@ func sampleDeb() error {
 	if err != nil {
 		return err
 	}
-	err = d.Data.AddFile("/bin/ls", "/opt/danny/bin/ls")
-	if err != nil {
-		return err
-	}
-	err = d.Data.AddEmptyFolder("/var/log/lala")
-	if err != nil {
-		return err
-	}
-
 	d.PreInst = `echo hello world!`
 	d.Info.Maintainer = "Mickey Mouse <mickey@disney.com>"
 	d.Info.Section = "base"
@@ -43,6 +34,18 @@ func sampleDeb() error {
 	d.Info.Description = `Hello world
   Lorum ipsum
   Yada yada`
+	err = d.Data.AddFile("/bin/ls", "/opt/danny/bin/ls")
+	if err != nil {
+		return err
+	}
+	err = d.Data.AddEmptyFolder("/var/log/lala")
+	if err != nil {
+		return err
+	}
+	err = d.AddFolder("/tmp/", "/my/remote/")
+	if err != nil {
+		return err
+	}
 	debFileName, err := d.Create("")
 	fmt.Println("Created " + debFileName)
 	return err
@@ -75,7 +78,6 @@ func sampleRpm() error {
 	if err != nil {
 		return err
 	}
-	r.Spec.Write(os.Stdout)
 	rpmFileName, err := r.Create("")
 	fmt.Println("Created " + rpmFileName)
 	return err
