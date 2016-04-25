@@ -136,7 +136,7 @@ func (r *Rpm) AddFolder(path string, prefix string) error {
 		return err
 	}
 	for _, path := range fc.Files {
-		targetPath := strings.TrimPrefix(path, prefix)
+		targetPath := filepath.Join(prefix, path)
 		err = r.AddFile(path, targetPath)
 		if err != nil {
 			return err
