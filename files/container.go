@@ -23,8 +23,12 @@ func (c *Container) walk(path string) error {
 }
 
 func (c *Container) add(path string, info os.FileInfo, err error) error {
-	if !info.IsDir() {
+	if err != nil {
+		return err
+	}
+	if info.Mode().IsRegular() {
 		c.Files = append(c.Files, path)
+		return nil
 	}
 	return nil
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMain(t *testing.T) {
+func TestCreate(t *testing.T) {
 	err := sampleRpm()
 	assert.NoError(t, err)
 	err = sampleDeb()

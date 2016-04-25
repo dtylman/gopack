@@ -30,6 +30,11 @@ func sampleDeb() error {
 	if err != nil {
 		return err
 	}
+	err = d.Data.AddEmptyFolder("/var/log/lala")
+	if err != nil {
+		return err
+	}
+
 	d.PreInst = `echo hello world!`
 	d.Info.Maintainer = "Mickey Mouse <mickey@disney.com>"
 	d.Info.Section = "base"
@@ -62,6 +67,15 @@ func sampleRpm() error {
 	if err != nil {
 		return err
 	}
+	err = r.AddEmptyFolder("/var/log/lala")
+	if err != nil {
+		return err
+	}
+	err = r.AddFolder("/tmp/", "/my/remote/")
+	if err != nil {
+		return err
+	}
+	r.Spec.Write(os.Stdout)
 	rpmFileName, err := r.Create("")
 	fmt.Println("Created " + rpmFileName)
 	return err

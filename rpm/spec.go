@@ -3,6 +3,7 @@ package rpm
 import (
 	"fmt"
 	"io"
+	"strings"
 )
 
 const (
@@ -69,7 +70,12 @@ func (s *SpecFile) SetVersion(version string, revision string) {
 }
 
 func (s *SpecFile) AddFile(name string) {
-	s.Files = append(s.Files, name)
+	if strings.Contains(name, " ") {
+		s.Files = append(s.Files, fmt.Sprintf(`"%s"`, name))
+	} else {
+		s.Files = append(s.Files, name)
+	}
+
 }
 
 func (s *SpecFile) Write(writer io.Writer) error {
