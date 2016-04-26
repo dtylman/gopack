@@ -12,14 +12,18 @@ import (
 
 	"bytes"
 
+	"path/filepath"
+	"strings"
+
 	"github.com/blakesmith/ar"
 )
 
 type canonical struct {
-	file      *os.File
-	zip       *gzip.Writer
-	tarWriter *tar.Writer
-	md5s      bytes.Buffer
+	file         *os.File
+	zip          *gzip.Writer
+	tarWriter    *tar.Writer
+	md5s         bytes.Buffer
+	emptyFolders map[string]bool
 }
 
 func newCanonical() (*canonical, error) {
@@ -31,6 +35,7 @@ func newCanonical() (*canonical, error) {
 	}
 	c.zip = gzip.NewWriter(c.file)
 	c.tarWriter = tar.NewWriter(c.zip)
+	c.emptyFolders = make(map[string]bool)
 	return c, nil
 }
 
@@ -88,6 +93,13 @@ func (c *canonical) AddFile(name string, tarName string) error {
 	if fileInfo.IsDir() {
 		return fmt.Errorf("%s is a directory, use AddFolder instead", name)
 	}
+	if !fileInfo.Mode().IsRegular() {
+		return fmt.Errorf("%s is not a regular file", name)
+	}
+	err = c.ensureFilePath(tarName)
+	if err != nil {
+		return err
+	}
 	header, err := tar.FileInfoHeader(fileInfo, "")
 	if tarName != "" {
 		header.Name = tarName
@@ -141,6 +153,23 @@ func (c *canonical) close() error {
 	err = c.file.Close()
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func (c *canonical) ensureFilePath(path string) error {
+	items := strings.Split(path, string(filepath.Separator))
+	folder := "/"
+	for i := 0; i < len(items)-1; i++ {
+		folder = filepath.Join(folder, items[i])
+		_, ok := c.emptyFolders[folder]
+		if !ok {
+			err := c.AddEmptyFolder(folder)
+			if err != nil {
+				return err
+			}
+			c.emptyFolders[folder] = true
+		}
 	}
 	return nil
 }
