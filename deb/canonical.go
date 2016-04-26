@@ -77,6 +77,10 @@ func (c *canonical) AddLink(name string, linkName string) error {
 }
 
 func (c *canonical) AddEmptyFolder(name string) error {
+	name = strings.TrimPrefix(name, "/")
+	if name == "" {
+		return fmt.Errorf("Cannot add empty name for empty folder")
+	}
 	header := new(tar.Header)
 	header.Name = name
 	header.Mode = 0775
@@ -96,6 +100,7 @@ func (c *canonical) AddFile(name string, tarName string) error {
 	if !fileInfo.Mode().IsRegular() {
 		return fmt.Errorf("%s is not a regular file", name)
 	}
+	tarName = strings.TrimPrefix(tarName, "/")
 	err = c.ensureFilePath(tarName)
 	if err != nil {
 		return err
