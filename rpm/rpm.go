@@ -147,6 +147,10 @@ func (r *Rpm) AddFolder(path string, prefix string) error {
 }
 
 func (r *Rpm) AddFile(sourcePath string, targetPath string) error {
+	sourceInfo, err := os.Stat(sourcePath)
+	if err != nil {
+		return err
+	}
 	srcFile, err := os.Open(sourcePath)
 	if err != nil {
 		return err
@@ -157,7 +161,8 @@ func (r *Rpm) AddFile(sourcePath string, targetPath string) error {
 	if err != nil {
 		return err
 	}
-	destFile, err := os.Create(destPath)
+
+	destFile, err := os.OpenFile(destPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, sourceInfo.Mode())
 	if err != nil {
 		return err
 	}
