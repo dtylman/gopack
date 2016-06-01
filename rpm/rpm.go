@@ -101,7 +101,7 @@ func (r *Rpm) Create(folder string) (string, error) {
 	cmd.Stderr = &stderr
 	err = cmd.Run()
 	if err != nil {
-		return "", fmt.Errorf("rpmbuild failed with: %v. Stdout: %v. Stderr: %v", err, stdout.String(), stderr.String())
+		return "", fmt.Errorf("rpmbuild failed with: %v. Stdout: %v. Stderr: %v. specFileName: %v", err, stdout.String(), stderr.String(),specFile.Name())
 	}
 	rpmFile := filepath.Join(rpmdir, r.Spec.Header[BuildArch], r.Spec.PackageName())
 	_, err = os.Stat(rpmFile)
