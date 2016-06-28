@@ -118,16 +118,14 @@ func (r *Rpm) Create(folder string) (string, error) {
 	var stderr bytes.Buffer
 	cmd := exec.Command("rpmbuild", "-bb", specFile.Name())
 
-	home := os.Getenv("HOME")
-	if home != "" {
-		_, err := os.Stat(home)
-		if err != nil {
-
-		}
-	}
 	err = r.rpmHasValidTopDir()
 	if err != nil {
-		cmd.Env = []string{"HOME=" + r.buildRoot}
+		homeFolder := filepath.Join(r.workingFolder, "HOME")
+		err = os.MkdirAll(homeFolder, 0755)
+		if err != nil {
+			return "", err
+		}
+		cmd.Env = []string{"HOME=" + homeFolder}
 	}
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
