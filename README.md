@@ -1,5 +1,7 @@
 # gopack
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/dtylman/gopack)](https://goreportcard.com/report/github.com/dtylman/gopack)
+
 Easy create deb & rpm pacakges from `go`
 
 ## Creating packages
