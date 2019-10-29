@@ -9,7 +9,7 @@ Easy create deb & rpm pacakges.
 
 Usage:
 ```sh
-go get github.com/dtylman/gopack/deb
+go get github.com/dtylman/gopack
 ```
 
 ### Using CLI
