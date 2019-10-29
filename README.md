@@ -15,27 +15,27 @@ go get github.com/dtylman/gopack
 ### Using CLI
 
 Create a configuration file, as follows:
-```json
+```javascript
 {
-	"name": "testpackage",
-	"version": "0",
+    "name": "testpackage",
+    "version": "0",
     "revision": "1",
     "arch": "amd64", //use deb or rpm specific value
     "description": "test package for gopack", 
     "homepage": "https://github.com/dtylman/gopack/",
     "depends": "binutils",
     "section": "Utils",
-	"maintainer": "dtylman@gmail.com",
-	// add a list of folders to be copied into the deb/rpm,	
+    "maintainer": "dtylman@gmail.com",
+    // add a list of folders to be copied into the deb/rpm,	
     "folders": {
         "." : "/lala", //will copy everything from the local folder to /lala/...
         "/usr/local/bobobo" : ""  // will just create /usr/local/bobobo on target
 	},
-	//list of files to be copied to target, soruce -> target
+    //list of files to be copied to target, soruce -> target
     "files": {      
         "main.go" : "/usr/local/main.go"  
 	},
-	//provide files to be used as pre-inst and post-inst scripts
+    //provide files to be used as pre-inst and post-inst scripts
     "scripts": {
         "pre_inst": "preinst.sh",
         "post_inst": "postinst.sh",
