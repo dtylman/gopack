@@ -2,7 +2,8 @@
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/dtylman/gopack)](https://goreportcard.com/report/github.com/dtylman/gopack)
 
-Easy create deb & rpm pacakges from `go`
+Easy create deb & rpm pacakges.
+
 
 ## Creating packages
 
@@ -10,6 +11,60 @@ Usage:
 ```sh
 go get github.com/dtylman/gopack/deb
 ```
+
+### Using CLI
+
+Create a configuration file, as follows:
+```json
+{
+	"name": "testpackage",
+	"version": "0",
+    "revision": "1",
+    "arch": "amd64", //use deb or rpm specific value
+    "description": "test package for gopack", 
+    "homepage": "https://github.com/dtylman/gopack/",
+    "depends": "binutils",
+    "section": "Utils",
+	"maintainer": "dtylman@gmail.com",
+	// add a list of folders to be copied into the deb/rpm,	
+    "folders": {
+        "." : "/lala", //will copy everything from the local folder to /lala/...
+        "/usr/local/bobobo" : ""  // will just create /usr/local/bobobo on target
+	},
+	//list of files to be copied to target, soruce -> target
+    "files": {      
+        "main.go" : "/usr/local/main.go"  
+	},
+	//provide files to be used as pre-inst and post-inst scripts
+    "scripts": {
+        "pre_inst": "preinst.sh",
+        "post_inst": "postinst.sh",
+        "pre_uninst": "",
+        "post_uninst": ""
+    }
+}
+```
+
+Save the above as `pkg.conf.json` and use the following command:
+
+```bash
+gopack -conf pkg.conf.json -deb -rpm -output /tmp
+```
+
+Usage:
+```bash
+Usage of gopack:
+  -conf string
+        config file name (default "pkg.config.json")
+  -deb
+        build deb package
+  -output string
+        output path
+  -rpm
+        build rpm pacakge
+```
+
+### From Sources
 And then: 
 ```go
 import	"github.com/dtylman/gopack/deb"

@@ -16,15 +16,18 @@ import (
 )
 
 const (
+	//AMD64 architecture
 	AMD64 = "x86_64"
 )
 
+//Rpm represents rpm package
 type Rpm struct {
-	Spec          *SpecFile
+	Spec          *SpecFile `json:"spec"`
 	workingFolder string
 	buildRoot     string
 }
 
+//New creates new rpm struct
 func New(name, version, revision, arch string) (*Rpm, error) {
 	r := new(Rpm)
 	r.Spec = newSpec()
@@ -63,6 +66,7 @@ func New(name, version, revision, arch string) (*Rpm, error) {
 	return r, nil
 }
 
+//Close closes the rpm packge
 func (r *Rpm) Close() error {
 	return os.RemoveAll(r.workingFolder)
 }
@@ -92,6 +96,7 @@ func (r *Rpm) rpmHasValidTopDir() error {
 	return nil
 }
 
+//Create creates rpm pacage, return file name
 func (r *Rpm) Create(folder string) (string, error) {
 	rpmdir, err := filepath.Abs(folder)
 	if err != nil {
@@ -150,6 +155,7 @@ func (r *Rpm) movePackageFile(path string, info os.FileInfo, err error) error {
 	return nil
 }
 
+//AddEmptyFolder adds empty folder
 func (r *Rpm) AddEmptyFolder(name string) error {
 	destFolder := filepath.Join(r.buildRoot, name)
 	err := os.MkdirAll(destFolder, 0755)
@@ -160,6 +166,7 @@ func (r *Rpm) AddEmptyFolder(name string) error {
 	return nil
 }
 
+//AddFolder adds a folder and its contents
 func (r *Rpm) AddFolder(path string, prefix string) error {
 	fc, err := files.New(path)
 	if err != nil {
@@ -176,6 +183,7 @@ func (r *Rpm) AddFolder(path string, prefix string) error {
 	return nil
 }
 
+//AddFile adds a file
 func (r *Rpm) AddFile(sourcePath string, targetPath string) error {
 	sourceInfo, err := os.Stat(sourcePath)
 	if err != nil {

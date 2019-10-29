@@ -5,10 +5,12 @@ import (
 	"path/filepath"
 )
 
+//Container ...
 type Container struct {
 	Files []string
 }
 
+//New ...
 func New(path string) (*Container, error) {
 	c := new(Container)
 	err := c.walk(path)

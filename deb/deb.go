@@ -15,6 +15,7 @@ import (
 )
 
 const (
+	//AMD64 amd664 arch
 	AMD64      = "amd64"
 	debControl = "control.tar.gz"
 	debData    = "data.tar.gz"
@@ -23,13 +24,13 @@ const (
 
 //Deb represents a deb package
 type Deb struct {
-	Data     *canonical
-	Control  *canonical
-	Info     Control
-	PreInst  string
-	PostInst string
-	PreRm    string
-	PostRm   string
+	Data     *canonical `json:"-"`
+	Control  *canonical `json:"-"`
+	Info     Control    `json:"control"`
+	PreInst  string     `json':"pre_inst"`
+	PostInst string     `json':"post_inst"`
+	PreRm    string     `json:"pre_rm"`
+	PostRm   string     `json:"post_rm"`
 }
 
 //New creates new deb writer
@@ -126,14 +127,17 @@ func (d *Deb) addBinary(writer *ar.Writer) error {
 	return err
 }
 
+//AddFile adds a file to package
 func (d *Deb) AddFile(sourcePath string, targetPath string) error {
 	return d.Data.AddFile(sourcePath, targetPath)
 }
 
+//AddEmptyFolder adds empty folder to package
 func (d *Deb) AddEmptyFolder(name string) error {
 	return d.Data.AddEmptyFolder(name)
 }
 
+//AddFolder adds folder to package
 func (d *Deb) AddFolder(path string, prefix string) error {
 	fc, err := files.New(path)
 	if err != nil {

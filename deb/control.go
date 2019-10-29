@@ -8,16 +8,16 @@ import (
 
 //Control represents debian control structure
 type Control struct {
-	Package      string
-	Version      string
-	Source       string
-	Depends      string
-	Architecture string
-	Maintainer   string
-	Conflicts    string
-	Section      string
-	Homepage     string
-	Description  string
+	Package      string `json:"-"`
+	Version      string `json:"-"`
+	Source       string `json:"source"`
+	Depends      string `json:"depends"`
+	Architecture string `json:"-"`
+	Maintainer   string `json:"maintainer"`
+	Conflicts    string `json:"conflicts"`
+	Section      string `json:"section"`
+	Homepage     string `json:"homepage"`
+	Description  string `json:"description"`
 }
 
 //Bytes marshal control structure as bytes

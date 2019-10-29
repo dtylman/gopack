@@ -1,0 +1,24 @@
+{
+    "name": "testpackage",
+    "version": "0",
+    "revision": "1",
+    "arch": "amd64",
+    "description": "test package for gopack",
+    "homepage": "https://github.com/dtylman/gopack/",
+    "depends": "binutils",
+    "section": "Utils",
+    "maintainer": "dtylman@gmail.com",
+    "folders": {
+        "." : "/lala",
+        "/usr/local/bobobo" : ""        
+    },
+    "files": {      
+        "main.go" : "/usr/local/main.go"  
+    },
+    "scripts": {
+        "pre_inst": "go.mod",
+        "post_inst": "go.sum",
+        "pre_uninst": "",
+        "post_uninst": ""
+    }
+}

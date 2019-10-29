@@ -1,89 +1,160 @@
 package main
 
 import (
+	"errors"
+	"flag"
 	"fmt"
-	"os"
+	"io/ioutil"
+	"log"
+	"strings"
+
+	"github.com/dtylman/gopack/rpm"
 
 	"github.com/dtylman/gopack/deb"
-	"github.com/dtylman/gopack/rpm"
 )
 
-func check(err error) {
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+//output folder
+var outputPath string
+
+func addScript(sourceFileName string, value *string) error {
+	if sourceFileName == "" {
+		return nil
 	}
+	data, err := ioutil.ReadFile(sourceFileName)
+	if err != nil {
+		return err
+	}
+	if value == nil {
+		return errors.New("script value is null")
+	}
+	log.Printf("Adding script '%v' (%v bytes)", sourceFileName, len(data))
+	*value = string(data)
+	return nil
 }
 
-const (
-	pkgName     = "helloworld"
-	pkgVersion  = "1.0"
-	pkgRevision = "1"
-)
-
-func sampleDeb() error {
-	d, err := deb.New(pkgName, pkgVersion, pkgRevision, deb.AMD64)
+func createRPM(cfg *Config) error {
+	log.Println("Creating rpm...")
+	pkg, err := rpm.New(cfg.Name, cfg.Version, cfg.Revision, cfg.Arch)
 	if err != nil {
 		return err
 	}
-	d.PreInst = `echo hello world!`
-	d.Info.Maintainer = "Mickey Mouse <mickey@disney.com>"
-	d.Info.Section = "base"
-	d.Info.Homepage = "http://disney.org/"
-	d.Info.Depends = "libc6 (>= 2.14), libgcrypt11 (>= 1.5.1), zlib1g (>= 1:1.1.4)"
-	d.Info.Description = `Hello world
-  Lorum ipsum
-  Yada yada`
-	err = d.Data.AddFile("/bin/ls", "/opt/danny/bin/ls")
-	if err != nil {
-		return err
+	pkg.Spec.Header[rpm.Summary] = cfg.Name
+	pkg.Spec.Header[rpm.Packager] = cfg.Maintainer
+	pkg.Spec.Header[rpm.URL] = cfg.Homepage
+	pkg.Spec.Depends(strings.Split(cfg.Depends, " ")...)
+	pkg.Spec.Description = cfg.Description
+	for path, prefix := range cfg.Folders {
+		if prefix == "" {
+			err = pkg.AddEmptyFolder(path)
+		} else {
+			err = pkg.AddFolder(path, prefix)
+		}
+		if err != nil {
+			return fmt.Errorf("Failed to add folder: %v", err)
+		}
 	}
-	err = d.Data.AddEmptyFolder("/var/log/lala")
-	if err != nil {
-		return err
+	for source, target := range cfg.Files {
+		err = pkg.AddFile(source, target)
+		if err != nil {
+			return fmt.Errorf("Failed to ad file: '%v'", err)
+		}
 	}
-	err = d.AddFolder("/tmp/", "/my/remote/")
+	fileName, err := pkg.Create(outputPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to create package: '%v'", err)
 	}
-	debFileName, err := d.Create("")
-	fmt.Println("Created " + debFileName)
-	return err
+	log.Printf("created: '%v'", fileName)
+	return nil
 }
 
-func sampleRpm() error {
-	r, err := rpm.New(pkgName, pkgVersion, pkgRevision, rpm.AMD64)
+func createDeb(cfg *Config) error {
+	log.Println("Creating deb...")
+	deb, err := deb.New(cfg.Name, cfg.Version, cfg.Revision, cfg.Arch)
 	if err != nil {
 		return err
 	}
-	defer r.Close()
-	r.Spec.Pre = `echo hello world!`
-	r.Spec.Header[rpm.Summary] = "Hello world app"
-	r.Spec.Header[rpm.Packager] = "Mickey Mouse <mickey@disney.com>"
-	r.Spec.Header[rpm.URL] = "http://disney.org/"
+	deb.Info.Description = cfg.Description
+	deb.Info.Homepage = cfg.Homepage
+	deb.Info.Depends = cfg.Depends
+	deb.Info.Section = cfg.Section
+	deb.Info.Maintainer = cfg.Maintainer
 
-	r.Spec.Depends("yum", "rpm", "mc")
-	r.Spec.Description = `Hello world
-  Lorum ipsum
-  Yada yada`
-	err = r.AddFile("/bin/ls", "/opt/danny/bin/ls")
-	if err != nil {
-		return err
+	for path, prefix := range cfg.Folders {
+		if prefix == "" {
+			log.Printf("Adding empty folder '%v'", path)
+			err = deb.AddEmptyFolder(path)
+		} else {
+			log.Printf("Adding folder '%v'->'%v'", path, prefix)
+			err = deb.AddFolder(path, prefix)
+		}
+		if err != nil {
+			return fmt.Errorf("Failed to add folder: %v", err)
+		}
 	}
-	err = r.AddEmptyFolder("/var/log/lala")
-	if err != nil {
-		return err
+	for source, target := range cfg.Files {
+		log.Printf("Adding file '%v'->'%v'", source, target)
+		err = deb.AddFile(source, target)
+		if err != nil {
+			return fmt.Errorf("Failed to add file: '%v'", err)
+		}
 	}
-	err = r.AddFolder("/tmp/", "/my/remote/")
+
+	err = addScript(cfg.Script.PostInst, &deb.PostInst)
 	if err != nil {
-		return err
+		return fmt.Errorf("Failed to add script '%v'", err)
 	}
-	rpmFileName, err := r.Create("")
-	fmt.Println("Created " + rpmFileName)
-	return err
+	err = addScript(cfg.Script.PreInst, &deb.PreInst)
+	if err != nil {
+		return fmt.Errorf("Failed to add script '%v'", err)
+	}
+
+	err = addScript(cfg.Script.PostUnInst, &deb.PostRm)
+	if err != nil {
+		return fmt.Errorf("Failed to add script '%v'", err)
+	}
+
+	err = addScript(cfg.Script.PreUnInst, &deb.PreRm)
+	if err != nil {
+		return fmt.Errorf("Failed to add script '%v'", err)
+	}
+
+	fileName, err := deb.Create(outputPath)
+	if err != nil {
+		return fmt.Errorf("Failed to create package: '%v'", err)
+	}
+
+	log.Printf("created: '%v'", fileName)
+	return nil
+}
+
+func create(configFile string, rpm, deb bool) error {
+	cfg, err := Load(configFile)
+	if err != nil {
+		return fmt.Errorf("Failed to load config file: '%v', error: %v", configFile, err)
+	}
+	if rpm {
+		err = createRPM(cfg)
+		if err != nil {
+			return fmt.Errorf("Failed to create rpm: %v", err)
+		}
+	}
+	if deb {
+		err = createDeb(cfg)
+		if err != nil {
+			return fmt.Errorf("Failed to create deb: %v", err)
+		}
+	}
+	return nil
 }
 
 func main() {
-	check(sampleRpm())
-	check(sampleDeb())
+	rpm := flag.Bool("rpm", false, "build rpm pacakge")
+	deb := flag.Bool("deb", false, "build deb package")
+	conf := flag.String("conf", "pkg.config.json", "config file name")
+	flag.StringVar(&outputPath, "output", "", "output path")
+	flag.Parse()
+	err := create(*conf, *rpm, *deb)
+	if err != nil {
+		log.Println(err)
+	}
 }
