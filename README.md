@@ -2,6 +2,9 @@
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/dtylman/gopack)](https://goreportcard.com/report/github.com/dtylman/gopack)
 
+Build: 
+[![CircleCI](https://circleci.com/gh/dtylman/gopack.svg?style=svg)](https://circleci.com/gh/dtylman/gopack)
+
 Easy create deb & rpm pacakges.
 
 
