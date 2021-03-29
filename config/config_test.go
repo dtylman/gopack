@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"encoding/json"
@@ -15,7 +15,7 @@ func TestLoad(t *testing.T) {
 }
 
 func TestCreateConf(t *testing.T) {
-	var conf Config
+	var conf PackageOptions
 	conf.Files = make(map[string]string)
 	conf.Folders = make(map[string]string)
 	conf.Files["source"] = "target"

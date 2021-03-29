@@ -8,6 +8,7 @@ import (
 	"log"
 	"strings"
 
+	"github.com/dtylman/gopack/config"
 	"github.com/dtylman/gopack/rpm"
 
 	"github.com/dtylman/gopack/deb"
@@ -32,7 +33,7 @@ func addScript(sourceFileName string, value *string) error {
 	return nil
 }
 
-func createRPM(cfg *Config) error {
+func createRPM(cfg *config.PackageOptions) error {
 	log.Println("Creating rpm...")
 	pkg, err := rpm.New(cfg.Name, cfg.Version, cfg.Revision, cfg.Arch)
 	if err != nil {
@@ -50,24 +51,24 @@ func createRPM(cfg *Config) error {
 			err = pkg.AddFolder(path, prefix)
 		}
 		if err != nil {
-			return fmt.Errorf("Failed to add folder: %v", err)
+			return fmt.Errorf("failed to add folder: %v", err)
 		}
 	}
 	for source, target := range cfg.Files {
 		err = pkg.AddFile(source, target)
 		if err != nil {
-			return fmt.Errorf("Failed to ad file: '%v'", err)
+			return fmt.Errorf("failed to ad file: '%v'", err)
 		}
 	}
 	fileName, err := pkg.Create(outputPath)
 	if err != nil {
-		return fmt.Errorf("Failed to create package: '%v'", err)
+		return fmt.Errorf("failed to create package: '%v'", err)
 	}
 	log.Printf("created: '%v'", fileName)
 	return nil
 }
 
-func createDeb(cfg *Config) error {
+func createDeb(cfg *config.PackageOptions) error {
 	log.Println("Creating deb...")
 	deb, err := deb.New(cfg.Name, cfg.Version, cfg.Revision, cfg.Arch)
 	if err != nil {
@@ -88,39 +89,39 @@ func createDeb(cfg *Config) error {
 			err = deb.AddFolder(path, prefix)
 		}
 		if err != nil {
-			return fmt.Errorf("Failed to add folder: %v", err)
+			return fmt.Errorf("failed to add folder: %v", err)
 		}
 	}
 	for source, target := range cfg.Files {
 		log.Printf("Adding file '%v'->'%v'", source, target)
 		err = deb.AddFile(source, target)
 		if err != nil {
-			return fmt.Errorf("Failed to add file: '%v'", err)
+			return fmt.Errorf("failed to add file: '%v'", err)
 		}
 	}
 
 	err = addScript(cfg.Script.PostInst, &deb.PostInst)
 	if err != nil {
-		return fmt.Errorf("Failed to add script '%v'", err)
+		return fmt.Errorf("failed to add script '%v'", err)
 	}
 	err = addScript(cfg.Script.PreInst, &deb.PreInst)
 	if err != nil {
-		return fmt.Errorf("Failed to add script '%v'", err)
+		return fmt.Errorf("failed to add script '%v'", err)
 	}
 
 	err = addScript(cfg.Script.PostUnInst, &deb.PostRm)
 	if err != nil {
-		return fmt.Errorf("Failed to add script '%v'", err)
+		return fmt.Errorf("failed to add script '%v'", err)
 	}
 
 	err = addScript(cfg.Script.PreUnInst, &deb.PreRm)
 	if err != nil {
-		return fmt.Errorf("Failed to add script '%v'", err)
+		return fmt.Errorf("failed to add script '%v'", err)
 	}
 
 	fileName, err := deb.Create(outputPath)
 	if err != nil {
-		return fmt.Errorf("Failed to create package: '%v'", err)
+		return fmt.Errorf("failed to create package: '%v'", err)
 	}
 
 	log.Printf("created: '%v'", fileName)
@@ -128,20 +129,20 @@ func createDeb(cfg *Config) error {
 }
 
 func create(configFile string, rpm, deb bool) error {
-	cfg, err := Load(configFile)
+	cfg, err := config.Load(configFile)
 	if err != nil {
-		return fmt.Errorf("Failed to load config file: '%v', error: %v", configFile, err)
+		return fmt.Errorf("failed to load config file: '%v', error: %v", configFile, err)
 	}
 	if rpm {
 		err = createRPM(cfg)
 		if err != nil {
-			return fmt.Errorf("Failed to create rpm: %v", err)
+			return fmt.Errorf("failed to create rpm: %v", err)
 		}
 	}
 	if deb {
 		err = createDeb(cfg)
 		if err != nil {
-			return fmt.Errorf("Failed to create deb: %v", err)
+			return fmt.Errorf("failed to create deb: %v", err)
 		}
 	}
 	return nil

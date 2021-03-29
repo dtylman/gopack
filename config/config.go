@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"encoding/json"
@@ -13,8 +13,8 @@ type Scripts struct {
 	PostUnInst string `json:"post_uninst"`
 }
 
-//Config holds package configuration details
-type Config struct {
+//PackageOptions holds package configuration details
+type PackageOptions struct {
 	Name        string            `json:"name"`
 	Version     string            `json:"version"`
 	Revision    string            `json:"revision"`
@@ -30,12 +30,12 @@ type Config struct {
 }
 
 //Load loads configuration from file
-func Load(fileName string) (*Config, error) {
+func Load(fileName string) (*PackageOptions, error) {
 	data, err := ioutil.ReadFile(fileName)
 	if err != nil {
 		return nil, err
 	}
-	var conf Config
+	var conf PackageOptions
 	err = json.Unmarshal(data, &conf)
 	return &conf, err
 }
