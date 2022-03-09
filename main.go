@@ -14,8 +14,21 @@ import (
 	"github.com/dtylman/gopack/deb"
 )
 
-//output folder
-var outputPath string
+//Options holds commandline options
+var Options struct {
+	//OutPath is the output path
+	OutPath string
+	//ConfigFileName config file name
+	ConfigFileName string
+	//BuildRPM if true, will build RPM
+	BuildRPM bool
+	//BuildDeb if true, will build Deb
+	BuildDeb bool
+	//Version to specify in command line
+	Version string
+	//Revision to specify in command line
+	Revision string
+}
 
 func addScript(sourceFileName string, value *string) error {
 	if sourceFileName == "" {
@@ -60,7 +73,7 @@ func createRPM(cfg *config.PackageOptions) error {
 			return fmt.Errorf("failed to ad file: '%v'", err)
 		}
 	}
-	fileName, err := pkg.Create(outputPath)
+	fileName, err := pkg.Create(Options.OutPath)
 	if err != nil {
 		return fmt.Errorf("failed to create package: '%v'", err)
 	}
@@ -119,7 +132,7 @@ func createDeb(cfg *config.PackageOptions) error {
 		return fmt.Errorf("failed to add script '%v'", err)
 	}
 
-	fileName, err := deb.Create(outputPath)
+	fileName, err := deb.Create(Options.OutPath)
 	if err != nil {
 		return fmt.Errorf("failed to create package: '%v'", err)
 	}
@@ -128,33 +141,45 @@ func createDeb(cfg *config.PackageOptions) error {
 	return nil
 }
 
-func create(configFile string, rpm, deb bool) error {
-	cfg, err := config.Load(configFile)
+func create() error {
+	cfg, err := config.Load(Options.ConfigFileName)
 	if err != nil {
-		return fmt.Errorf("failed to load config file: '%v', error: %v", configFile, err)
+		return fmt.Errorf("failed to load config file: '%v', error: %v", Options.ConfigFileName, err)
 	}
-	if rpm {
+	if Options.Version != "" {
+		log.Printf("setting version to %v", Options.Version)
+		cfg.Version = Options.Version
+	}
+	if Options.Revision != "" {
+		log.Printf("setting revision to %v", Options.Revision)
+	}
+	if Options.BuildRPM {
 		err = createRPM(cfg)
 		if err != nil {
 			return fmt.Errorf("failed to create rpm: %v", err)
 		}
 	}
-	if deb {
+	if Options.BuildDeb {
 		err = createDeb(cfg)
 		if err != nil {
 			return fmt.Errorf("failed to create deb: %v", err)
 		}
 	}
+	if !Options.BuildDeb && !Options.BuildRPM {
+		return errors.New("must specify ether 'rpm' or 'deb'")
+	}
 	return nil
 }
 
 func main() {
-	rpm := flag.Bool("rpm", false, "build rpm pacakge")
-	deb := flag.Bool("deb", false, "build deb package")
-	conf := flag.String("conf", "pkg.config.json", "config file name")
-	flag.StringVar(&outputPath, "output", "", "output path")
+	flag.BoolVar(&Options.BuildRPM, "rpm", false, "build rpm package")
+	flag.BoolVar(&Options.BuildDeb, "deb", false, "build deb package")
+	flag.StringVar(&Options.ConfigFileName, "conf", "pkg.config.json", "config file name")
+	flag.StringVar(&Options.OutPath, "output", "", "output path")
+	flag.StringVar(&Options.Version, "version", "", "specify package version")
+	flag.StringVar(&Options.Revision, "revision", "", "specify package revision")
 	flag.Parse()
-	err := create(*conf, *rpm, *deb)
+	err := create()
 	if err != nil {
 		log.Println(err)
 	}
