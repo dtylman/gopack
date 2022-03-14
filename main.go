@@ -14,6 +14,9 @@ import (
 	"github.com/dtylman/gopack/deb"
 )
 
+//Version is gopack version
+var Version = "0.0.1"
+
 //Options holds commandline options
 var Options struct {
 	//OutPath is the output path
@@ -172,6 +175,7 @@ func create() error {
 }
 
 func main() {
+	fmt.Printf("gopack version %v\n", Version)
 	flag.BoolVar(&Options.BuildRPM, "rpm", false, "build rpm package")
 	flag.BoolVar(&Options.BuildDeb, "deb", false, "build deb package")
 	flag.StringVar(&Options.ConfigFileName, "conf", "pkg.config.json", "config file name")
