@@ -1,9 +1,7 @@
 # gopack
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/dtylman/gopack)](https://goreportcard.com/report/github.com/dtylman/gopack)
-
-Build: 
 [![Go](https://github.com/dtylman/gopack/actions/workflows/go.yml/badge.svg)](https://github.com/dtylman/gopack/actions/workflows/go.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/dtylman/gopack)](https://goreportcard.com/report/github.com/dtylman/gopack)
 
 Easy create deb & rpm pacakges.
 
