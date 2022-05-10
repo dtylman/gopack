@@ -3,7 +3,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/dtylman/gopack)](https://goreportcard.com/report/github.com/dtylman/gopack)
 
 Build: 
-[![CircleCI](https://circleci.com/gh/dtylman/gopack.svg?style=svg)](https://circleci.com/gh/dtylman/gopack)
+[![Go](https://github.com/dtylman/gopack/actions/workflows/go.yml/badge.svg)](https://github.com/dtylman/gopack/actions/workflows/go.yml)
 
 Easy create deb & rpm pacakges.
 
