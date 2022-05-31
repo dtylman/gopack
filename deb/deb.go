@@ -31,6 +31,8 @@ type Deb struct {
 	PostInst string     `json':"post_inst"`
 	PreRm    string     `json:"pre_rm"`
 	PostRm   string     `json:"post_rm"`
+	//A package declares its list of conffiles by including a conffiles file in its control archive
+	ConfFiles string `json:"conf_files"`
 }
 
 //New creates new deb writer
@@ -57,7 +59,7 @@ func New(name, version, revision, arch string) (*Deb, error) {
 //Create creates the deb file
 func (d *Deb) Create(folder string) (string, error) {
 	if d.Info.Package == "" {
-		return "", errors.New("Package name cannot be empty")
+		return "", errors.New("package name cannot be empty")
 	}
 	err := d.Control.AddEmptyFolder("./")
 	if err != nil {
@@ -71,19 +73,36 @@ func (d *Deb) Create(folder string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	if d.PostInst != "" {
-		d.Control.AddBytes([]byte(d.PostInst), "postinst")
+		err = d.Control.AddBytes([]byte(d.PostInst), "postinst")
+		if err != nil {
+			return "", err
+		}
 	}
 	if d.PreInst != "" {
-		d.Control.AddBytes([]byte(d.PreInst), "preinst")
-
+		err = d.Control.AddBytes([]byte(d.PreInst), "preinst")
+		if err != nil {
+			return "", err
+		}
 	}
 	if d.PostRm != "" {
-		d.Control.AddBytes([]byte(d.PostRm), "postrm")
-
+		err = d.Control.AddBytes([]byte(d.PostRm), "postrm")
+		if err != nil {
+			return "", err
+		}
 	}
 	if d.PreRm != "" {
-		d.Control.AddBytes([]byte(d.PreRm), "prerm")
+		err = d.Control.AddBytes([]byte(d.PreRm), "prerm")
+		if err != nil {
+			return "", err
+		}
+	}
+	if d.ConfFiles != "" {
+		err = d.Control.AddBytes([]byte(d.ConfFiles), "conffiles")
+		if err != nil {
+			return "", err
+		}
 	}
 	fileName := filepath.Join(folder, fmt.Sprintf("%s_%s_%s.deb", d.Info.Package, d.Info.Version, d.Info.Architecture))
 	debFile, err := os.Create(fileName)

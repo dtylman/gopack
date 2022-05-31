@@ -53,6 +53,7 @@ func sampleDeb() error {
 	d.Info.Description = `Hello world
   Lorum ipsum
   Yada yada`
+	d.ConfFiles = "/etc/hoho.cfg"
 	debFileName, err := d.Create("")
 	fmt.Println("Created " + debFileName)
 	return err

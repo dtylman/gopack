@@ -27,6 +27,7 @@ type PackageOptions struct {
 	Folders     map[string]string `json:"folders"`
 	Files       map[string]string `json:"files"`
 	Script      Scripts           `json:"scripts"`
+	Conffiles   string            `json:"conffiles"`
 }
 
 //Load loads configuration from file

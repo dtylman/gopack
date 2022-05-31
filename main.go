@@ -15,9 +15,9 @@ import (
 )
 
 //Version is gopack version
-var Version = "0.0.1"
+var Version = "0.0.2"
 
-//Options holds commandline options
+//Options holds command line options
 var Options struct {
 	//OutPath is the output path
 	OutPath string
@@ -33,18 +33,19 @@ var Options struct {
 	Revision string
 }
 
-func addScript(sourceFileName string, value *string) error {
-	if sourceFileName == "" {
+//loadFile loads from file name to value
+func loadFile(from string, value *string) error {
+	if from == "" {
 		return nil
 	}
-	data, err := ioutil.ReadFile(sourceFileName)
+	data, err := ioutil.ReadFile(from)
 	if err != nil {
 		return err
 	}
 	if value == nil {
-		return errors.New("script value is null")
+		return errors.New("value is null")
 	}
-	log.Printf("Adding script '%v' (%v bytes)", sourceFileName, len(data))
+	log.Printf("loaded file '%v' (%v bytes)", from, len(data))
 	*value = string(data)
 	return nil
 }
@@ -116,23 +117,19 @@ func createDeb(cfg *config.PackageOptions) error {
 		}
 	}
 
-	err = addScript(cfg.Script.PostInst, &deb.PostInst)
-	if err != nil {
-		return fmt.Errorf("failed to add script '%v'", err)
-	}
-	err = addScript(cfg.Script.PreInst, &deb.PreInst)
-	if err != nil {
-		return fmt.Errorf("failed to add script '%v'", err)
-	}
-
-	err = addScript(cfg.Script.PostUnInst, &deb.PostRm)
-	if err != nil {
-		return fmt.Errorf("failed to add script '%v'", err)
+	files := map[string]*string{
+		cfg.Script.PostInst:   &deb.PostInst,
+		cfg.Script.PreInst:    &deb.PreInst,
+		cfg.Script.PostUnInst: &deb.PostRm,
+		cfg.Script.PreUnInst:  &deb.PreRm,
+		cfg.Conffiles:         &deb.ConfFiles,
 	}
 
-	err = addScript(cfg.Script.PreUnInst, &deb.PreRm)
-	if err != nil {
-		return fmt.Errorf("failed to add script '%v'", err)
+	for source, target := range files {
+		err = loadFile(source, target)
+		if err != nil {
+			return fmt.Errorf("failed to load file %v", source)
+		}
 	}
 
 	fileName, err := deb.Create(Options.OutPath)
